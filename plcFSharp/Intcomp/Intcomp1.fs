@@ -10,7 +10,7 @@ module Intcomp1
 type expr = 
   | CstI of int
   | Var of string
-  | Let of string * expr * expr
+  | Let of (string * expr) list * expr
   | Prim of string * expr * expr;;
 
 (* Some closed expressions: *)
@@ -50,9 +50,11 @@ let rec eval e (env : (string * int) list) : int =
     match e with
     | CstI i            -> i
     | Var x             -> lookup env x 
-    | Let(x, erhs, ebody) -> 
-      let xval = eval erhs env
-      let env1 = (x, xval) :: env 
+    //| Let(x, erhs, ebody) -> 
+    | Let(binds, ebody) -> 
+      let env1 = List.fold (fun acc (x, erhs) -> 
+        let xval = eval erhs acc
+        (x, xval) :: acc) env binds
       eval ebody env1
     | Prim("+", e1, e2) -> eval e1 env + eval e2 env
     | Prim("*", e1, e2) -> eval e1 env * eval e2 env
@@ -213,8 +215,22 @@ let rec freevars e : string list =
     match e with
     | CstI i -> []
     | Var x  -> [x]
-    | Let(x, erhs, ebody) -> 
-          union (freevars erhs, minus (freevars ebody, [x]))
+    // | Let(x, erhs, ebody) -> 
+    //       union (freevars erhs, minus (freevars ebody, [x]))
+    | Let(binds ebody) -> 
+        let rec helper lst acc = 
+            match lst with 
+            | [] -> acc
+            | (x, erhs) :: xs ->
+                helper xs (union (freevars erhs, minus (freevars ebody, [x])))
+        helper binds []
+    | LetC(binds, ebody) ->
+       let (bound, fvBinds) = 
+       List.fold (fun (bound, acc)(x, erhs) ->
+        let fvRhs = minus (freevars erhs, bound)
+        (x :: bound, union (fvRhs, acc))) 
+        ([], []) binds
+        union (fvBinds, minus (freevars ebody, bound))
     | Prim(ope, e1, e2) -> union (freevars e1, freevars e2);;
 
 (* Alternative definition of closed *)
@@ -247,9 +263,16 @@ let rec tcomp (e : expr) (cenv : string list) : texpr =
     match e with
     | CstI i -> TCstI i
     | Var x  -> TVar (getindex cenv x)
-    | Let(x, erhs, ebody) -> 
-      let cenv1 = x :: cenv 
-      TLet(tcomp erhs cenv, tcomp ebody cenv1)
+    // | Let(x, erhs, ebody) -> 
+    //   let cenv1 = x :: cenv 
+    //   TLet(tcomp erhs cenv, tcomp ebody cenv1)
+    | Let(binds, ebody) -> 
+      let rec helper lst cenve = 
+        match lst with 
+        | [] -> tcomp ebody cenve
+        | (x, erhs) :: xs ->
+            TLet(tcomp erhs cenve, helper xs (x :: cenve))
+      helper binds cenv
     | Prim(ope, e1, e2) -> TPrim(ope, tcomp e1 cenv, tcomp e2 cenv);;
 
 (* Evaluation of target expressions with variable indexes.  The
