@@ -26,7 +26,11 @@ class Machine {
     final int[] rpn2 = { SCST, 17, SCST, 22, SCST, 100, SVAR, 1, SMUL, 
 			 SSWAP, SPOP, SVAR, 1, SADD, SSWAP, SPOP };
     System.out.println(seval(rpn2));
+
+      final int[] test = { 0, 17, 1, 0, 1, 1, 2, 6, 5 };
+      System.out.println(seval(test));
   }
+
 
   static int seval(int[] code) {
     int[] stack = new int[1000];	// evaluation and env stack
