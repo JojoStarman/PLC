@@ -115,6 +115,14 @@ run (fromString "let f x = x + 7 in f 2 end");;
 ```fsharp
 #q;;
 ```
+<!-- run (fromString "let sum n = if n = 0 then 0 else n + (sum (n - 1)) in sum 1000 end");; -->
+
+<!-- run (fromString "let power8 n = if n = 0 then 1 else 3 * power8(n - 1) in power8 8 end");; -->
+
+<!-- run (fromString "let power3 n = if n = 0 then 1 else 3 * power3(n - 1) in let sum3 x = if x = 0 then 1 else power3 x + sum3(x - 1) in sum3 11 end end");; -->
+
+<!-- run (fromString "let pow8 n = let pws k = if k = 0 then 1 else n * pws(k - 1) in pws 8 end in let sum8 m = if m = 0 then 0 else pow8 m + sum8(m - 1) in sum8 10 end end");; -->
+
 
 ## D. Build the lexer, parser and higher-order evaluator
 
