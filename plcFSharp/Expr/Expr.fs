@@ -268,6 +268,10 @@ type sinstr =
   | SPop                                (* pop value/unbind var   *)
   | SSwap                               (* exchange top and next  *)
  
+
+let compString (str: string) : sinstr list = 
+    scomp (fromString str) []
+
 let rec seval (inss : sinstr list) stack = 
     match inss, stack with 
     | [], (v :: _)      -> v
