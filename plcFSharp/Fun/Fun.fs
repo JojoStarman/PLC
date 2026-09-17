@@ -24,7 +24,7 @@ let rec lookup env x =
 
 type value = 
   | Int of int
-  | Closure of string * string * expr * value env       (* (f, x, fBody, fDeclEnv) *)
+  | Closure of string * string list * expr * value env       (* (f, x, fBody, fDeclEnv) *)
 
 let rec eval (e : expr) (env : value env) : int =
     match e with 
@@ -52,17 +52,29 @@ let rec eval (e : expr) (env : value env) : int =
       let b = eval e1 env
       if b<>0 then eval e2 env
       else eval e3 env
-    | Letfun(f, x, fBody, letBody) -> 
-      let bodyEnv = (f, Closure(f, x, fBody, env)) :: env 
+    | Letfun(f, lst, fBody, letBody) -> 
+      let bodyEnv = (f, Closure(f, lst, fBody, env)) :: env 
       eval letBody bodyEnv
-    | Call(Var f, eArg) -> 
+    // | Letfun(f, x, fBody, letBody) -> 
+    //   let bodyEnv = (f, Closure(f, x, fBody, env)) :: env 
+    //   eval letBody bodyEnv
+    | Call(Var f, eArgs) -> 
       let fClosure = lookup env f
       match fClosure with
-      | Closure (f, x, fBody, fDeclEnv) ->
-        let xVal = Int(eval eArg env)
-        let fBodyEnv = (x, xVal) :: (f, fClosure) :: fDeclEnv
-        eval fBody fBodyEnv
+      | Closure (fName, names, fBody, fDeclEnv) ->
+        let argVals = eArgs |> List.map (fun arg -> eval arg env)
+        let bindings = List.zip names argVals 
+        let fBodyEnv = bindings @ [ (fName, fClosure) ] @ fDeclEnv 
+        eval fBody fBodyEnv 
       | _ -> failwith "eval Call: not a function"
+    // | Call(Var f, eArg) -> 
+    //   let fClosure = lookup env f
+    //   match fClosure with
+    //   | Closure (f, x, fBody, fDeclEnv) ->
+    //     let xVal = Int(eval eArg env)
+    //     let fBodyEnv = (x, xVal) :: (f, fClosure) :: fDeclEnv
+    //     eval fBody fBodyEnv
+    //   | _ -> failwith "eval Call: not a function"
     | Call _ -> failwith "eval Call: not first-order function"
 
 (* Evaluate in empty environment: program must have no free variables: *)
