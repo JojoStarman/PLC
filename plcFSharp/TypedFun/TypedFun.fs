@@ -37,6 +37,7 @@ type typ =
   | TypI                                (* int                         *)
   | TypB                                (* bool                        *)
   | TypF of typ * typ                   (* (argumenttype, resulttype)  *)
+  | TypL of typ
 
 (* New abstract syntax with explicit types, instead of Absyn.expr: *)
 
@@ -49,7 +50,8 @@ type tyexpr =
   | If of tyexpr * tyexpr * tyexpr
   | Letfun of string * string * typ * tyexpr * typ * tyexpr
           (* (f,       x,       xTyp, fBody,  rTyp, letBody *)
-  | Call of tyexpr * tyexpr
+  | ListExpr of tyexpr list * tyexpr
+  | Call of tyexpr * typ
 
 (* A runtime value is an integer or a function closure *)
 
@@ -137,6 +139,12 @@ let rec typ (e : tyexpr) (env : typ env) : typ =
         if typ eArg env = xTyp then rTyp
         else failwith "Call: wrong argument type"
       | _ -> failwith "Call: unknown function"
+    | ListExpr (xs, t) -> 
+      let eTypes = List.map (fun e -> typ e env) xs 
+      if List.forall ((=) t) eTypes then 
+        TypL t 
+      else 
+        failwith "ListExpr: one or more element types do not match the element type"
     | Call(_, eArg) -> failwith "Call: illegal function in call"
 
 let typeCheck e = typ e [];;
