@@ -11,3 +11,4 @@ type expr =
   | If of expr * expr * expr
   | Letfun of string * string list * expr * expr    (* (f, list of x, fBody, letBody) *)
   | Call of expr * expr list
+  | Fun of string * expr 

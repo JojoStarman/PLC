@@ -165,6 +165,18 @@ open ParseAndRunHigher;;
 run (fromString @"let twice f = let g x = f(f(x)) in g end 
                   in let mul3 z = z*3 in twice mul3 2 end end");;
 ```
+<!-- run (fromString "let add x = let f y = x + y in f end in add 2 5 end");; -->
+<!-- run (fromString @"let add x = let f y = x + y in f end 
+                  in let addtwo = add 2
+                     in addtwo 5 end end");; -->
+
+<!-- run (fromString @"let add x = let f y = x + y in f end 
+                  in let addtwo = add 2
+                     in let x = 77 in addtwo 5 end end end");; -->
+
+<!-- run (fromString @"let add x = let f y = x + y in f end 
+                  in add 2 end");; -->
+
 
 ```fsharp
 #q;;
@@ -180,6 +192,41 @@ dotnet fsi -r bin/Debug/net10.0/FsLexYacc.Runtime.dll Absyn.fs FunPar.fs FunLex.
 open ParseAndType;;
 inferType (fromString "let f x = 1 in f 7 + f false end");;
 ```
+<!-- 
+inferType (fromString "let f x = 1 in f f end");;
+
+inferType (fromString "let f g = g g in f end");;
+
+inferType (fromString "let f x = let g y = y in g false end in f 42 end");;
+
+inferType (fromString "let f x = let g y = if true then y else x in g false end in f 42 end");;
+
+inferType (fromString "let f x = let g y = if true then y else x in g false end in f true end");; -->
+
+<!-- inferType (fromString "let f x = if x then false else true in f end");;
+val it: string = "(bool -> bool)"
+
+inferType (fromString " let f x = x + 1 in f end");;
+val it: string = "(int -> int)"
+
+inferType (fromString " let f x = let g y = x + y in g end in f end");;
+val it: string = "(int -> (int -> int))"
+
+inferType (fromString " let f x = let g y = x in g end in f end");;
+val it: string = "('h -> ('g -> 'h))"
+
+inferType (fromString " let f x = let g y = y in g end in f end");;
+val it: string = "('g -> ('h -> 'h))"
+
+inferType (fromString " let f x = let g y = let z o = y (x o) in z end in g end in f end")
+;;
+val it: string = "(('l -> 'k) -> (('k -> 'm) -> ('l -> 'm)))"
+
+inferType (fromString " let f x = let g = f x in g end in f end");;
+val it: string = "('e -> 'f)"
+
+inferType (fromString " let f x = f 69 in f 69 end");;
+val it: string = "'e" -->
 
 ```fsharp
 #q;;
