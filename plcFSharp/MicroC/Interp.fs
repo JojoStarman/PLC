@@ -195,6 +195,14 @@ and eval e locEnv gloEnv store : int * store =
       let (i1, store1) as res = eval e1 locEnv gloEnv store
       if i1<>0 then res else eval e2 locEnv gloEnv store1
     | Call(f, es) -> callfun f es locEnv gloEnv store 
+    | PreInc acc ->  let (loc, store1) = access acc locEnv gloEnv store
+                      let numb = getSto store1 loc
+                      let newStore = setSto store1 loc (numb + 1)
+                      (numb + 1, newStore)
+    | PreDec acc -> let (loc, store1) = access acc locEnv gloEnv store
+                      let numb = getSto store1 loc
+                      let newStore = setSto store1 loc (numb - 1)
+                      (numb - 1, newStore)
 
 and access acc locEnv gloEnv store : int * store = 
     match acc with 
@@ -223,6 +231,7 @@ and callfun f es locEnv gloEnv store : int * store =
         bindVars (List.map snd paramdecs) vs (varEnv, nextloc) store1
     let store3 = exec fBody fBodyEnv gloEnv store2 
     (-111, store3)
+ 
 
 (* Interpret a complete micro-C program by initializing the store 
    and global environments, then invoking its `main' function.

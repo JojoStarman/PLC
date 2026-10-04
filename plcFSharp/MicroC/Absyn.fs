@@ -22,8 +22,10 @@ and expr =
   | Prim2 of string * expr * expr    (* Binary primitive operator   *)
   | Andalso of expr * expr           (* Sequential and              *)
   | Orelse of expr * expr            (* Sequential or               *)
-  | Call of string * expr list       (* Function call f(...)        *)
-                                                                   
+  | Call of string * expr list       (* Function call f(...)     *)
+  | PreInc of access 
+  | PreDec of access 
+                                                                  
 and access =                                                       
   | AccVar of string                 (* Variable access        x    *) 
   | AccDeref of expr                 (* Pointer dereferencing  *p   *)
