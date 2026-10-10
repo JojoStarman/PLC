@@ -147,6 +147,39 @@ let rec cStmt stmt (varEnv : varEnv) (funEnv : funEnv) : instr list =
       [RET (snd varEnv - 1)]
     | Return (Some e) -> 
       cExpr e varEnv funEnv @ [RET (snd varEnv)]
+    | Switch (e, cases) ->
+          let labend = newLabel() 
+          let caseLabs = cases |> List.map (fun _ -> newLabel())
+          let pop1 = [INCSP -1]
+          let  testCode = 
+            (List.zip cases caseLabs) 
+            |> List.cllect (fun ((k, _caseStmt), labCase) -> 
+              let labNext = newLabel()
+            [
+              DUP 
+              CSTI k
+              EQ
+              IFZERO labNext
+              GOTO labCase
+              Label labNext
+            ])
+            
+          let noMatchCode = 
+            pop1 @ [GOTO labEnd]
+          let bodyCode = 
+            (List.zip cases caselabs)
+            |> List.collect (fun ((_k, caseStmt), labCase) -> 
+               [Label labCase]
+               @ pop1 
+               @ cStmt caseStmt varEnv funEnv 
+               @ [GOTO labEnd])
+          cExpr e varEnc funEnv 
+          @ testCode
+          @ noMatchCode
+          @ bodyCode
+          @ [Label labEnd]
+          
+    
 
 and cStmtOrDec stmtOrDec (varEnv : varEnv) (funEnv : funEnv) : varEnv * instr list = 
     match stmtOrDec with 
@@ -209,6 +242,21 @@ and cExpr (e : expr) (varEnv : varEnv) (funEnv : funEnv) : instr list =
       @ cExpr e2 varEnv funEnv
       @ [GOTO labend; Label labtrue; CSTI 1; Label labend]
     | Call(f, es) -> callfun f es varEnv funEnv
+    | PreInc acc -> cAccess acc varEnv funEnv @ [DUP; LDI; CSTI 1; ADD; STI]
+    | PreDec acc -> cAccess acc varEnv funEnv @ [DUP; LDI; CSTI 1; SUB; STI]
+    | Cond (e1, e2, e3) -> 
+      let labend  = newLabel()
+      let labfalse = newLabel()
+      cExpr e1 varEnv funEnv
+      @ [IFZERO labfalse]
+      cExpr e2 varEnv funEnv
+      @ [GOTO labend; Label labfalse;]
+      cExpr e3 varEnv funEnv
+      @ [Label labend]
+
+
+
+
 
 (* Generate code to access variable, dereference pointer or index array.
    The effect of the compiled code is to leave an lvalue on the stack.   *)
